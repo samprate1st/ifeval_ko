@@ -15,7 +15,7 @@
 
 """Registry of all instructions."""
 
-from instruction_following_eval import instructions
+from ifeval_ko import instructions
 
 _KEYWORD = "keywords:"
 

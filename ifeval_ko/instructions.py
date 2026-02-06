@@ -13,7 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Library of instructions."""
+"""Library of instructions for Korean IFEval (IFEval-Ko).
+
+Based on allganize/IFEval-Ko Korean adaptation of Google Research's IFEval.
+Key changes from English version:
+- Removed English WORD_LIST fallbacks (keywords must be provided in Korean data)
+- Updated title format to support Korean <<제목>>
+- Korean-aware text comparison for RepeatPromptThenAnswer
+- Removed English-only defaults for keyword generation
+"""
 
 import collections
 import json
@@ -25,7 +33,7 @@ import logging
 
 import langdetect
 
-from instruction_following_eval import instructions_util
+from ifeval_ko import instructions_util
 
 log = logging.getLogger(__name__)
 
@@ -748,18 +756,21 @@ class KeywordChecker(Instruction):
 
         Args:
           keywords: A sequence of strings representing the keywords that are
-            expected in the response.
+            expected in the response. Must be provided in the dataset kwargs.
 
         Returns:
           A string representing the instruction description.
+
+        Raises:
+          ValueError: If keywords are not provided in the dataset.
         """
 
         if not keywords:
-            self._keywords = instructions_util.generate_keywords(
-                num_keywords=_NUM_KEYWORDS
+            raise ValueError(
+                "keywords must be provided in the dataset kwargs. "
+                "Korean IFEval does not support automatic English keyword generation."
             )
-        else:
-            self._keywords = keywords
+        self._keywords = keywords
         self._keywords = sorted(self._keywords)
 
         self._description_pattern = "Include keywords {keywords} in the response."
@@ -775,9 +786,12 @@ class KeywordChecker(Instruction):
         return ["keywords"]
 
     def check_following(self, value):
-        """Check if the response contain the expected keywords."""
+        """Check if the response contain the expected keywords.
+
+        Uses re.escape for safe matching of Korean keywords.
+        """
         for keyword in self._keywords:
-            if not re.search(keyword, value, flags=re.IGNORECASE):
+            if not re.search(re.escape(keyword), value, flags=re.IGNORECASE):
                 return False
         return True
 
@@ -802,9 +816,11 @@ class KeywordFrequencyChecker(Instruction):
           A string representing the instruction description.
         """
         if not keyword:
-            self._keyword = instructions_util.generate_keywords(num_keywords=1)[0]
-        else:
-            self._keyword = keyword.strip()
+            raise ValueError(
+                "keyword must be provided in the dataset kwargs. "
+                "Korean IFEval does not support automatic English keyword generation."
+            )
+        self._keyword = keyword.strip()
 
         self._frequency = frequency
         if self._frequency is None or self._frequency < 0:
@@ -844,8 +860,11 @@ class KeywordFrequencyChecker(Instruction):
         return ["keyword", "frequency", "relation"]
 
     def check_following(self, value):
-        """Checks if the response contain the keyword with required frequency."""
-        actual_occurrences = len(re.findall(self._keyword, value, flags=re.IGNORECASE))
+        """Checks if the response contain the keyword with required frequency.
+
+        Uses re.escape for safe matching of Korean keywords.
+        """
+        actual_occurrences = len(re.findall(re.escape(self._keyword), value, flags=re.IGNORECASE))
 
         if self._comparison_relation == _COMPARISON_RELATION[0]:
             return actual_occurrences < self._frequency
@@ -980,7 +999,10 @@ class ParagraphFirstWordCheck(Instruction):
 
         self._first_word = first_word
         if self._first_word is None:
-            self._first_word = instructions_util.generate_keywords(num_keywords=1)[0]
+            raise ValueError(
+                "first_word must be provided in the dataset kwargs. "
+                "Korean IFEval does not support automatic English keyword generation."
+            )
         self._first_word = self._first_word.lower()
 
         self._description_pattern = (
@@ -1071,10 +1093,11 @@ class KeySentenceChecker(Instruction):
         """
 
         if not key_sentences:
-            # TODO(jeffrey) make a generate sentences function? wonderwords package
-            self._key_sentences = set(["For now, this is fine."])
-        else:
-            self._key_sentences = key_sentences
+            raise ValueError(
+                "key_sentences must be provided in the dataset kwargs. "
+                "Korean IFEval does not support automatic English sentence generation."
+            )
+        self._key_sentences = key_sentences
 
         if not num_sentences:
             self._num_sentences = random.randint(1, len(self._key_sentences))
@@ -1126,11 +1149,11 @@ class ForbiddenWords(Instruction):
         """
 
         if not forbidden_words:
-            self._forbidden_words = instructions_util.generate_keywords(
-                num_keywords=_NUM_KEYWORDS
+            raise ValueError(
+                "forbidden_words must be provided in the dataset kwargs. "
+                "Korean IFEval does not support automatic English keyword generation."
             )
-        else:
-            self._forbidden_words = list(set(forbidden_words))
+        self._forbidden_words = list(set(forbidden_words))
         self._forbidden_words = sorted(self._forbidden_words)
         self._description_pattern = (
             "Do not include keywords {forbidden_words} in the response."
@@ -1147,9 +1170,13 @@ class ForbiddenWords(Instruction):
         return ["forbidden_words"]
 
     def check_following(self, value):
-        """Check if the response does not contain the expected keywords."""
+        """Check if the response does not contain the expected keywords.
+
+        Uses simple substring matching instead of word boundary matching,
+        as Korean text does not have word boundaries like English.
+        """
         for word in self._forbidden_words:
-            if re.search(r"\b" + word + r"\b", value, flags=re.IGNORECASE):
+            if re.search(re.escape(word), value, flags=re.IGNORECASE):
                 return False
         return True
 
@@ -1301,15 +1328,22 @@ class EndChecker(Instruction):
 
         Args:
           end_phrase: A string representing the phrase the response should end with.
+            Must be provided in the dataset kwargs for Korean IFEval.
 
         Returns:
           A string representing the instruction description.
+
+        Raises:
+          ValueError: If end_phrase is not provided in the dataset.
         """
         self._end_phrase = (
             end_phrase.strip() if isinstance(end_phrase, str) else end_phrase
         )
         if self._end_phrase is None:
-            self._end_phrase = random.choice(_ENDING_OPTIONS)
+            raise ValueError(
+                "end_phrase must be provided in the dataset kwargs. "
+                "Korean IFEval does not support automatic English ending phrase generation."
+            )
         self._description_pattern = (
             "Finish your response with this exact phrase {ender}. "
             "No other words should follow this phrase."
@@ -1331,13 +1365,16 @@ class EndChecker(Instruction):
 
 
 class TitleChecker(Instruction):
-    """Checks the response for a title."""
+    """Checks the response for a title.
+
+    Supports Korean title format <<제목>> as well as English format.
+    """
 
     def build_description(self):
         """Build the instruction description."""
         self._description_pattern = (
             "Your answer must contain a title, wrapped in double angular brackets,"
-            " such as <<poem of joy>>."
+            " such as <<제목>>."
         )
         return self._description_pattern
 
@@ -1349,7 +1386,7 @@ class TitleChecker(Instruction):
         return []
 
     def check_following(self, value):
-        """Checks if the response contains a title."""
+        """Checks if the response contains a title in <<title>> or <<제목>> format."""
         pattern = r"<<[^\n]+>>"
         re_pattern = re.compile(pattern)
         titles = re.findall(re_pattern, value)

@@ -17,7 +17,7 @@
 
 from absl.testing import absltest
 from absl.testing import parameterized
-from instruction_following_eval import instructions
+from ifeval_ko import instructions
 
 
 # pylint:disable=g-complex-comprehension
@@ -831,8 +831,11 @@ I love it too much. I'll just have to make sure to eat it in moderation.
 
     instruction.build_description(forbidden_words=self.FORBIDDEN_WORDS_3)
     with self.subTest(f'test {self.TEST_FORBIDDEN_WORDS_MESSAGE_3}\n ' +
-                      f'with forbidden words: {self.FORBIDDEN_WORDS_2}. '):
-      self.assertTrue(
+                      f'with forbidden words: {self.FORBIDDEN_WORDS_3}. '):
+      # With Korean-style substring matching, "GENE" matches inside
+      # "Generative" and "TRANSFORM" matches inside "Transformer",
+      # so the response is flagged as containing forbidden words.
+      self.assertFalse(
           instruction.check_following(self.TEST_FORBIDDEN_WORDS_MESSAGE_3))
 
   TEST_ORIGINAL_PARAGRAPH_1 = """
@@ -1256,6 +1259,89 @@ I love it too much. I'll just have to make sure to eat it in moderation.
       self.assertFalse(
           instruction.check_following(self.TEST_QUOTATION_MESSAGE_2)
       )
+
+  # Korean-specific test cases
+  TEST_KOREAN_TITLE_MESSAGE_1 = """
+  <<기쁨의 노래>>
+  라라라. 행복한 노래.
+  """
+
+  TEST_KOREAN_TITLE_MESSAGE_2 = """
+  이것이 제목인가요?
+  <<이것이 제목입니다>>
+  """
+
+  def test_title_checker_korean(self):
+    """Check the prompt for a Korean title."""
+    instruction_id = 'detectable_format:title'
+    instruction = instructions.TitleChecker(instruction_id)
+    instruction.build_description()
+    with self.subTest('Korean title at start'):
+      self.assertTrue(instruction.check_following(self.TEST_KOREAN_TITLE_MESSAGE_1))
+    with self.subTest('Korean title at end'):
+      self.assertTrue(instruction.check_following(self.TEST_KOREAN_TITLE_MESSAGE_2))
+
+  KOREAN_KEYWORDS = ('인공지능', '머신러닝')
+
+  def test_keyword_checker_korean(self):
+    """Test the inclusion of Korean keywords."""
+    instruction_id = 'keywords:include_keywords'
+    instruction = instructions.KeywordChecker(instruction_id)
+
+    instruction.build_description(keywords=self.KOREAN_KEYWORDS)
+    response_with_keywords = '인공지능과 머신러닝은 현대 기술의 핵심입니다.'
+    with self.subTest('Korean keywords present'):
+      self.assertTrue(instruction.check_following(response_with_keywords))
+
+    response_without_keywords = '오늘 날씨가 좋습니다.'
+    with self.subTest('Korean keywords absent'):
+      self.assertFalse(instruction.check_following(response_without_keywords))
+
+  def test_keyword_checker_requires_keywords(self):
+    """Test that KeywordChecker raises ValueError when no keywords provided."""
+    instruction_id = 'keywords:include_keywords'
+    instruction = instructions.KeywordChecker(instruction_id)
+    with self.assertRaises(ValueError):
+      instruction.build_description()
+
+  KOREAN_FORBIDDEN_WORDS = ('폭력', '차별')
+
+  def test_forbidden_words_korean(self):
+    """Test Korean forbidden words."""
+    instruction_id = 'keywords:forbidden_words'
+    instruction = instructions.ForbiddenWords(instruction_id)
+
+    instruction.build_description(forbidden_words=self.KOREAN_FORBIDDEN_WORDS)
+    clean_response = '우리는 평화와 존중을 중요시합니다.'
+    with self.subTest('Korean response without forbidden words'):
+      self.assertTrue(instruction.check_following(clean_response))
+
+    forbidden_response = '폭력은 절대 허용되지 않습니다.'
+    with self.subTest('Korean response with forbidden words'):
+      self.assertFalse(instruction.check_following(forbidden_response))
+
+  def test_forbidden_words_requires_words(self):
+    """Test that ForbiddenWords raises ValueError when no words provided."""
+    instruction_id = 'keywords:forbidden_words'
+    instruction = instructions.ForbiddenWords(instruction_id)
+    with self.assertRaises(ValueError):
+      instruction.build_description()
+
+  def test_end_checker_requires_phrase(self):
+    """Test that EndChecker raises ValueError when no end_phrase provided."""
+    instruction_id = 'startend:end_checker'
+    instruction = instructions.EndChecker(instruction_id)
+    with self.assertRaises(ValueError):
+      instruction.build_description()
+
+  def test_end_checker_korean(self):
+    """Test EndChecker with Korean end phrase."""
+    instruction_id = 'startend:end_checker'
+    instruction = instructions.EndChecker(instruction_id)
+    korean_end_phrase = '더 궁금한 점이 있으신가요?'
+    instruction.build_description(end_phrase=korean_end_phrase)
+    response = '오늘의 답변은 여기까지입니다. 더 궁금한 점이 있으신가요?'
+    self.assertTrue(instruction.check_following(response))
 
   INSTRUCTION_DICT = {
       'language:response_language': instructions.ResponseLanguageChecker,

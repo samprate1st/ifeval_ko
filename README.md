@@ -1,62 +1,88 @@
-# Instruction Following Eval
+# IFEval-Ko (Korean Instruction Following Eval)
 
-This is an unofficial fork of [IFEval](https://github.com/josejg/google-research/tree/master/instruction_following_eval) (see [paper](https://arxiv.org/abs/2311.07911)), designed to make running instruction following eval easier. The goals of the fork are as follows: 
+Korean adaptation of [IFEval](https://arxiv.org/abs/2311.07911) (Instruction Following Evaluation), based on the [allganize/IFEval-Ko](https://huggingface.co/datasets/allganize/IFEval-Ko) dataset and the [josejg/instruction_following_eval](https://github.com/josejg/instruction_following_eval) pip-installable fork.
 
-- Make the codebase `pip` installable & fix the dependencies
-- Provide runtime bindings that can be called from your own codebase. If you are interested in a CLI based interface see the original project.
+## Changes from English IFEval
 
-### Install 
+- **Korean dataset**: Prompts translated to Korean using GPT-4o (from allganize/IFEval-Ko)
+- **Unit conversions**: gallons to liters, feet to meters, dollars to won
+- **Title format**: `<<title>>` updated to `<<제목>>` style
+- **Removed English WORD_LIST fallbacks**: Keywords, forbidden words, and end phrases must be provided in the dataset kwargs (no automatic English word generation)
+- **Korean-aware text matching**: Uses substring matching instead of word boundary matching for keyword/forbidden word checks (since Korean doesn't have word boundaries like English)
+- **Package renamed**: from `instruction_following_eval` to `ifeval_ko`
 
-You can install **instruction_following_eval** with `pip` directly
-
-```shell
-pip install git+https://github.com/josejg/instruction_following_eval.git
-```
-
-or manually cloning it:
+## Install
 
 ```shell
-git clone https://github.com/josejg/instruction_following_eval.git
-cd instruction_following_eval
-pip install . 
+pip install git+https://github.com/samprate1st/ifeval_ko.git
 ```
 
-### Running IFEval
+or manually:
 
-To run instruction following eval in your codebase you just need to import `instruction_following_eval` and provide a list of examples encoded as dictionaries with the following structure:
+```shell
+git clone https://github.com/samprate1st/ifeval_ko.git
+cd ifeval_ko
+pip install .
+```
+
+## Download Korean Dataset
+
+After installing, download the Korean dataset from HuggingFace:
+
+```shell
+ifeval-ko-download
+```
+
+Or with a custom output path:
+
+```shell
+ifeval-ko-download --output /path/to/output.jsonl
+```
+
+Or programmatically:
 
 ```python
-# Example test
-{
- 'key': 1001,
- 'instruction_id_list': ['punctuation:no_comma'],
- 'prompt': 'I am planning a trip to Japan, and I would like thee to write an '
-           'itinerary for my journey in a Shakespearean style. You are not '
-           'allowed to use any commas in your response.',
- 'kwargs': [{}],
- 'response': '<MODEL RESPONSE>'
-}
+from ifeval_ko.download_data import download_and_convert
+download_and_convert()
 ```
 
-However, you can retrieve the list from examples of the [original paper](https://arxiv.org/abs/2311.07911) by calling `default_examples`.
+## Running IFEval-Ko
 
-```python 
-from instruction_following_eval import get_examples, evaluate_instruction_following
+```python
+from ifeval_ko import get_examples, evaluate_instruction_following
 
+# Load Korean examples (must download first)
 examples = get_examples()
 
+# Generate responses from your model
 for example in examples:
     example['response'] = model.generate(example['prompt'])
 
+# Evaluate
 metrics = evaluate_instruction_following(examples)
-
 print(metrics)
 ```
 
+Example data format:
 
-### Tests
+```python
+{
+    'key': 1001,
+    'instruction_id_list': ['punctuation:no_comma'],
+    'prompt': '일본 여행을 계획하고 있는데, 셰익스피어 스타일로 ...',
+    'kwargs': [{}],
+}
+```
+
+## Tests
 
 ```shell
-$ python test/instructions_test.py
-$ python test/instructions_util_test.py
+python test/instructions_test.py
+python test/instructions_util_test.py
 ```
+
+## Credits
+
+- Original IFEval: [Google Research](https://github.com/google-research/google-research/tree/master/instruction_following_eval)
+- Korean Dataset: [allganize/IFEval-Ko](https://huggingface.co/datasets/allganize/IFEval-Ko)
+- Pip-installable fork: [josejg/instruction_following_eval](https://github.com/josejg/instruction_following_eval)
