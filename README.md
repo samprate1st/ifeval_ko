@@ -46,7 +46,30 @@ from ifeval_ko.download_data import download_and_convert
 download_and_convert()
 ```
 
+## Update Korean Dataset
+
+To update the dataset to the latest version from HuggingFace (with automatic backup):
+
+```shell
+ifeval-ko-update
+```
+
+Or with a custom output path:
+
+```shell
+ifeval-ko-update --output /path/to/output.jsonl
+```
+
+Or programmatically:
+
+```python
+from ifeval_ko.update_data import update_dataset
+update_dataset()
+```
+
 ## Running IFEval-Ko
+
+### Programmatic Evaluation
 
 ```python
 from ifeval_ko import get_examples, evaluate_instruction_following
@@ -73,6 +96,38 @@ Example data format:
     'kwargs': [{}],
 }
 ```
+
+### Dataset Analysis
+
+Analyze the entire Korean dataset using the provided script:
+
+```shell
+# Run complete analysis and generate statistics
+python main.py
+
+# Analyze a custom dataset file
+python main.py --data-path /path/to/input_data.jsonl
+```
+
+This generates `dataset_statistics.json` with:
+- Total number of examples
+- Instruction frequency distribution
+- Common instruction combinations
+- Prompt length statistics (min, max, average)
+
+### Quick Start with runme.sh
+
+For a complete workflow (download/update dataset and analyze):
+
+```shell
+bash runme.sh
+```
+
+This script will:
+1. Install the package if needed
+2. Download or update the Korean dataset
+3. Run dataset analysis
+4. Display statistics and save results to `dataset_statistics.json`
 
 ## Tests
 
