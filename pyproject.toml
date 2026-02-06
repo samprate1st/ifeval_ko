@@ -35,6 +35,7 @@ Repository = "https://github.com/samprate1st/ifeval_ko"
 
 [project.scripts]
 ifeval-ko-download = "ifeval_ko.download_data:main"
+ifeval-ko-update = "ifeval_ko.update_data:main"
 
 [tool.setuptools.package-data]
 ifeval_ko = ["data/*"]
