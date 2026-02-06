@@ -8,9 +8,9 @@ from importlib import resources
 import typer
 from rich import print
 
-from instruction_following_eval import instructions_registry
+from ifeval_ko import instructions_registry
 
-DEFAULT_FILE = resources.files("instruction_following_eval") / "data/input_data.jsonl"
+DEFAULT_FILE = resources.files("ifeval_ko") / "data/input_data.jsonl"
 
 
 def ensure_nltk_resource():

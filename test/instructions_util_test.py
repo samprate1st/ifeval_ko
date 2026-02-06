@@ -17,7 +17,7 @@
 
 from absl.testing import absltest
 from absl.testing import parameterized
-from instruction_following_eval import instructions_util
+from ifeval_ko import instructions_util
 
 
 class InstructionsUtilTest(parameterized.TestCase):
@@ -114,9 +114,19 @@ sharing the research that they have done.
     self.assertEqual(self.EXPECTED_SENTENCE_SPLIT_1, sentence_split_1)
     self.assertEqual(self.EXPECTED_SENTENCE_SPLIT_2, sentence_split_2)
 
-  def test_generate_keywords(self):
-    """Tests generate keywords."""
-    self.assertLen(instructions_util.generate_keywords(10), 10)
+  def test_generate_keywords_raises(self):
+    """Tests that generate_keywords raises ValueError in Korean IFEval."""
+    with self.assertRaises(ValueError):
+      instructions_util.generate_keywords(10)
+
+  # Korean word counting test
+  TEST_KOREAN_WORD_COUNT = ("한국어 단어 세기 테스트입니다.", 4)
+
+  def test_korean_word_count(self):
+    """Tests Korean word counter."""
+    text, expected_num_words = self.TEST_KOREAN_WORD_COUNT
+    actual_num_words = instructions_util.count_words(text)
+    self.assertEqual(expected_num_words, actual_num_words)
 
 
 if __name__ == "__main__":

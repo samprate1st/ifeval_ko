@@ -3,40 +3,38 @@ requires      = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "instruction_following_eval"
+name = "ifeval-ko"
 version = "0.1.0"
-description = "Instruction Following Eval"
-authors = [{ name = "Jose Javier Gonzalez Ortiz"}]
+description = "Korean Instruction Following Eval (IFEval-Ko)"
+authors = [{ name = "Jose Javier Gonzalez Ortiz"}, { name = "Allganize" }]
 license = { file = "LICENSE" }
 readme = "README.md"
+requires-python = ">=3.9"
 classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
 ]
-keywords = ["instruction_following_eval", "formats", "machine learning", "encoding"]
+keywords = ["ifeval", "ifeval-ko", "korean", "instruction following", "evaluation", "machine learning"]
 dependencies = [
     "immutabledict",
     "langdetect",
     "nltk",
     "pandas",
     "typer",
+    "datasets",
+    "pyarrow",
 ]
 
-# [project.optional-dependencies]
-# dev = ["absl-py"]
-
-requires-python = ">=3.9"
+[project.optional-dependencies]
+dev = ["absl-py"]
 
 [project.urls]
-Homepage = "https://github.com/josejg/instruction_following_eval"
-Repository = "https://github.com/josejg/instruction_following_eval"
+Homepage = "https://huggingface.co/datasets/allganize/IFEval-Ko"
+Repository = "https://github.com/samprate1st/ifeval_ko"
 
+[project.scripts]
+ifeval-ko-download = "ifeval_ko.download_data:main"
 
 [tool.setuptools.package-data]
-instruction_following_eval = ["data/*"]
-
-
-# [project.scripts]
-# realpython = "reader.__main__:main"
-
+ifeval_ko = ["data/*"]
