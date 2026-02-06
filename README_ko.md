@@ -13,11 +13,43 @@
 
 ## 설치
 
+### 빠른 설치 (권장)
+
+클론 없이 GitHub에서 직접 설치:
+
 ```shell
 pip install git+https://github.com/samprate1st/ifeval_ko.git
 ```
 
-또는 수동으로:
+또는 특정 브랜치 설치:
+
+```shell
+pip install git+https://github.com/samprate1st/ifeval_ko.git@branch_name
+```
+
+### requirements.txt를 이용한 설치
+
+`requirements.txt` 파일에 패키지 추가:
+
+```
+git+https://github.com/samprate1st/ifeval_ko.git
+```
+
+또는 특정 브랜치 지정:
+
+```
+git+https://github.com/samprate1st/ifeval_ko.git@branch_name
+```
+
+설치:
+
+```shell
+pip install -r requirements.txt
+```
+
+### 수동 설치 (대안)
+
+리포지토리를 클론 후 로컬에서 설치:
 
 ```shell
 git clone https://github.com/samprate1st/ifeval_ko.git

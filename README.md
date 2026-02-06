@@ -13,11 +13,43 @@ Korean adaptation of [IFEval](https://arxiv.org/abs/2311.07911) (Instruction Fol
 
 ## Install
 
+### Quick Install (Recommended)
+
+Install directly from GitHub without cloning:
+
 ```shell
 pip install git+https://github.com/samprate1st/ifeval_ko.git
 ```
 
-or manually:
+Or install a specific branch:
+
+```shell
+pip install git+https://github.com/samprate1st/ifeval_ko.git@branch_name
+```
+
+### Using requirements.txt
+
+Add the package to your `requirements.txt`:
+
+```
+git+https://github.com/samprate1st/ifeval_ko.git
+```
+
+Or with a specific branch:
+
+```
+git+https://github.com/samprate1st/ifeval_ko.git@branch_name
+```
+
+Then install:
+
+```shell
+pip install -r requirements.txt
+```
+
+### Manual Installation (Alternative)
+
+Clone the repository and install locally:
 
 ```shell
 git clone https://github.com/samprate1st/ifeval_ko.git
